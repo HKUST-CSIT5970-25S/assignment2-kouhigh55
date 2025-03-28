@@ -43,6 +43,9 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			while (doc_tokenizer.hasMoreTokens()) {
+				context.write(new Text(doc_tokenizer.nextToken()), new IntWritable(1));
+			}
 		}
 	}
 
@@ -56,6 +59,11 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+			for (IntWritable val : values) {
+				sum += val.get();
+			}
+			context.write(key, new IntWritable(sum));
 		}
 	}
 
@@ -75,6 +83,16 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			ArrayList<String> sortedWordList = new ArrayList<String>(sorted_word_set);
+			for(int i = 0; i < sortedWordList.size() - 1; i++){
+				MapWritable map = new MapWritable();
+				Text word1 = new Text(sortedWordList.get(i));
+				for(int j = i + 1; j < sortedWordList.size(); j++){
+					Text word2 = new Text(sortedWordList.get(j));
+					map.put(word2, new IntWritable(1));
+				}
+				context.write(word1, map);
+			}
 		}
 	}
 
@@ -89,6 +107,21 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			MapWritable mergedMap = new MapWritable();
+			for (MapWritable map : values) {
+				for (Map.Entry<Writable, Writable> entry : map.entrySet()) {
+					Writable word = entry.getKey();
+					IntWritable count = (IntWritable) entry.getValue();
+					if (mergedMap.containsKey(word)) {
+						IntWritable existingCount = (IntWritable) mergedMap.get(word);
+						existingCount.set(existingCount.get() + count.get());
+					} else {
+						mergedMap.put(word, new IntWritable(count.get()));
+					}
+				}
+			}
+			context.write(key, mergedMap);
+
 		}
 	}
 
@@ -142,6 +175,35 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			MapWritable mergedMap = new MapWritable();
+			for (MapWritable map : values) {
+				for (Map.Entry<Writable, Writable> entry : map.entrySet()) {
+					Writable word = entry.getKey();
+					IntWritable count = (IntWritable) entry.getValue();
+					if (mergedMap.containsKey(word)) {
+						IntWritable existingCount = (IntWritable) mergedMap.get(word);
+						existingCount.set(existingCount.get() + count.get());
+					} else {
+						mergedMap.put(word, new IntWritable(count.get()));
+					}
+				}
+			}
+			// sort the keys, easy for verify
+			ArrayList<String> strings = new ArrayList<String>();
+			for (Writable k : mergedMap.keySet()) {
+				strings.add(k.toString());
+			}
+			Collections.sort(strings);
+
+			int count1 = word_total_map.get(key.toString());
+			for (String k : strings) {
+				IntWritable count = (IntWritable) mergedMap.get(new Text(k));
+				if (word_total_map.containsKey(k)) {
+					int count2 = word_total_map.get(k);
+					double cor = (double) count.get() / (count1*count2);
+					context.write(new PairOfStrings(key.toString(), k), new DoubleWritable(cor));
+				}
+			}
 		}
 	}
 

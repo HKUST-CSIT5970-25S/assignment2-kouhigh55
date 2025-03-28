@@ -53,6 +53,10 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			while (doc_tokenizer.hasMoreTokens()) {
+				context.write(new Text(doc_tokenizer.nextToken()), new IntWritable(1));
+			}
+
 		}
 	}
 
@@ -66,6 +70,11 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+			for (IntWritable val : values) {
+				sum += val.get();
+			}
+			context.write(key, new IntWritable(sum));
 		}
 	}
 
@@ -81,6 +90,21 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			HashSet<String> wordsSet = new HashSet<String>();
+			while(doc_tokenizer.hasMoreTokens()){
+				wordsSet.add(doc_tokenizer.nextToken());
+			}
+			ArrayList<String> words = new ArrayList<String>(wordsSet);
+			Collections.sort(words);
+			// A A B B also 1
+			for(int i = 0; i < words.size() - 1; i++){
+                for(int j = i + 1; j < words.size(); j++){
+					PairOfStrings pair = new PairOfStrings(words.get(i), words.get(j));
+					context.write(pair, new IntWritable(1));
+				}
+            }
+
+
 		}
 	}
 
@@ -93,6 +117,11 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+			for (IntWritable val : values) {
+				sum += val.get();
+			}
+			context.write(key, new IntWritable(sum));
 		}
 	}
 
@@ -145,6 +174,12 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+			for (IntWritable val : values) {
+				sum += val.get();
+			}
+			int d = word_total_map.get(key.getLeftElement()) * word_total_map.get(key.getRightElement());
+			context.write(key, new DoubleWritable((double)sum / d));
 		}
 	}
 

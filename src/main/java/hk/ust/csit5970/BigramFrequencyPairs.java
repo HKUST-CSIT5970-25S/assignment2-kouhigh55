@@ -93,6 +93,7 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 			while (iter.hasNext()) {
 				sum += iter.next().get();
 			}
+			// already sorted that (a, "") before (a, b)
 			if(key.getRightElement().equals("")){
 				marginal.set(sum);
 			} else{
